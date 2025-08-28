@@ -1,32 +1,92 @@
-name: First Demo Action
+name: Django CI
 
 on:
   push:
     branches:
+      - main   # 👉 তোমার default branch যদি master হয় তাহলে master লিখো
+  pull_request:
+    branches:
       - main
   workflow_dispatch:
+
 jobs:
-  demo-job:
+  test:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
-      - run: echo 'Action Started'
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: run a one-line script
-        run: echo Hello, world!
-      - name: run a multi-line script
-        run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
-      - name: list files
-        run: ls ${GITHUB_WORKSPACE}
-      - name: print GitHub context
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: echo "$GITHUB_CONTEXT"
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
-      - name: Action Completed
-        run: echo 'Action Completed'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run migrations
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/test_db
+        run: |
+          python manage.py migrate
+
+      - name: Run tests
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/test_db
+        run: |
+          python manage.py test
+
+
+
+
+
+# name: First Demo Action
+
+# on:
+#   push:
+#     branches:
+#       - main
+#   workflow_dispatch:
+# jobs:
+#   demo-job:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - run: echo 'Action Started'
+#       - name: Checkout
+#         uses: actions/checkout@v4
+
+#       - name: run a one-line script
+#         run: echo Hello, world!
+#       - name: run a multi-line script
+#         run: |
+#           echo Add other actions to build,
+#           echo test, and deploy your project.
+#       - name: list files
+#         run: ls ${GITHUB_WORKSPACE}
+#       - name: print GitHub context
+#         env:
+#           GITHUB_CONTEXT: ${{ toJson(github) }}
+#         run: echo "$GITHUB_CONTEXT"
+
+#       - name: Action Completed
+#         run: echo 'Action Completed'
         
