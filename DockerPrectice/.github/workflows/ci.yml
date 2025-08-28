@@ -1,47 +1,32 @@
-name: Django CI
+name: First Demo Action
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+    branches:
+      - main
 
 jobs:
-  build:
+  demo-job:
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgres:14
-        env:
-          POSTGRES_DB: django_db
-          POSTGRES_USER: django_user
-          POSTGRES_PASSWORD: django_pass
-        ports: ["5432:5432"]
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     steps:
-    - uses: actions/checkout@v3
+      - run: echo 'Action Started'
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: "3.10"
+      - name: run a one-line script
+        run: echo Hello, world!
+      - name: run a multi-line script
+        run: |
+          echo Add other actions to build,
+          echo test, and deploy your project.
+      - name: list files
+        run: ls ${GITHUB_WORKSPACE}
+      - name: print GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
 
-    - name: Install dependencies
-      run: |
-        pip install -r requirements.txt
-
-    - name: Run migrations
-      env:
-        DATABASE_URL: postgres://django_user:django_pass@localhost:5432/django_db
-      run: |
-        python manage.py migrate
-
-    - name: Run tests
-      run: |
-        python manage.py test
+      - name: Action Completed
+        run: echo 'Action Completed'
+        
